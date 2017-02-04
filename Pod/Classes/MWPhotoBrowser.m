@@ -1530,7 +1530,33 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 - (BOOL)areControlsHidden { return (_toolbar.alpha == 0); }
 - (void)hideControls { [self setControlsHidden:YES animated:YES permanent:NO]; }
 - (void)showControls { [self setControlsHidden:NO animated:YES permanent:NO]; }
-- (void)toggleControls { [self setControlsHidden:![self areControlsHidden] animated:YES permanent:NO]; }
+//- (void)toggleControls { [self setControlsHidden:![self areControlsHidden] animated:YES permanent:NO]; }
+- (void)toggleControls {
+    if (self.enableTapToDismiss) {
+        if (self.enableGrid) {
+            if (self.startOnGrid && !_gridController) {
+                [self showGrid:YES];
+                return;
+            } else if (!self.startOnGrid && _gridController) {
+                [self hideGrid];
+                return;
+            }
+        }
+        // Dismiss view controller
+        if ([_delegate respondsToSelector:@selector(photoBrowserDidFinishModalPresentation:)]) {
+            // Call delegate method and let them dismiss us
+            [_delegate photoBrowserDidFinishModalPresentation:self];
+        } else  {
+            CATransition *transition = [CATransition animation];
+            transition.duration = 0.3f;
+            transition.type = kCATransitionFade;
+            [self.navigationController.view.layer addAnimation:transition forKey:nil];
+            [self.navigationController popViewControllerAnimated:NO];
+        }
+    } else {
+        [self setControlsHidden:![self areControlsHidden] animated:YES permanent:NO];
+    }
+}
 
 #pragma mark - Properties
 
